@@ -258,3 +258,4 @@ for i in range(0,1):
 print(f"FULL TIME {time.time() - start_full}")
 list_data.clear()
 #example for Dima
+#test from dimasik
