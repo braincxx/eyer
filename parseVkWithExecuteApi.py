@@ -7,19 +7,23 @@ import random
 from datetime import datetime
 from collections import deque
 import time
+import pyodbc
 nest_asyncio.apply()
 
 import psycopg2
-#R
-conn = psycopg2.connect(dbname='research', user='user', password='1234', host='10.14.0.69', port=5555)
-
+"""Рабочий коннект"""
+conn = psycopg2.connect(dbname='postgres', user='postgres', password='postgrespw', host='192.168.0.103', port=49158)
+#conn = psycopg2.connect(dbname='research', user='user', password='1234', host='10.14.0.69', port=5555)
+"""
 with open("proxy_list.txt", "r") as f:
     proxyList = [i.strip().split() for i in f.readlines()]
+    """
     
-
+"""
 def lProxy():
     prx = random.choice(proxyList)
     return f"{prx[2]}://{prx[0]}:{prx[1]}"
+"""
 
 start_full = time.time()
 list_data=[]
