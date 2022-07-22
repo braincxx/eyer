@@ -9,6 +9,7 @@ from collections import deque
 import time
 import pyodbc
 nest_asyncio.apply()
+import requests
 
 import psycopg2
 """Рабочий коннект"""
@@ -263,3 +264,100 @@ print(f"FULL TIME {time.time() - start_full}")
 list_data.clear()
 #example for Dima
 #test from dimasik
+
+class VkApi():
+    id = 6222824
+    def __init__(self):
+
+        self._token = self.init_token()
+
+
+    def init_token(self):
+        with open("tokens.txt", "r") as f:
+            tokens_list = [i.strip() for i in f.readlines()]
+
+            return random.choice(tokens_list)
+
+    def build_url(self, id:str) -> str:
+
+        api = f"""API.friends.get({{'user_id':{id},'count':200}})"""
+
+
+        url = f"""https://api.vk.com/method/execute?access_token={self._token}&v=5.101&code=return%20[{api}];"""
+
+        return url
+
+    def build_url(self, idList: list) -> str:
+        api = f"""API.friends.get({{'user_id':{id},'count':200}})"""
+
+        for i in range(2, 26):
+            api += f""",API.friends.get({{'user_id':{id + i},'count':200}})"""
+
+        url = f"""https://api.vk.com/method/execute?access_token={self._token}&v=5.101&code=return%20[{api}];"""
+        return url
+
+    def buildUrlInterface(self, apiFuncParametrsList: list) -> str:
+
+        api = f"""{apiFuncParametrsList[0]['function']}({{ {", ".join(["'" + [(k, p) for (k, p) in param.items()][0][0] + "':" + str([(k, p) for (k, p) in param.items()][0][1]) for param in apiFuncParametrsList[0]['parameters']]) }  }} )"""
+        for i in range(1, len(apiFuncParametrsList)):
+            api += f""",{apiFuncParametrsList[i]['function']}({{ {", ".join(["'" + [(k, p) for (k, p) in param.items()][0][0] + "':" + str([(k, p) for (k, p) in param.items()][0][1]) for param in apiFuncParametrsList[i]['parameters']]) } }})"""
+
+        url = f"""https://api.vk.com/method/execute?access_token={list_token[id % len(list_token)]}&v=5.101&code=return%20[{api}];"""
+
+        return url
+
+    def getFriend(self, id: int) -> list:
+
+        apiFuncParametrsList = [
+            {
+                'function': 'API.friends.get',
+                'parameters':
+                    [
+                    {'user_id': id},
+                    {'count': 200}
+                ]
+            }
+        ]
+        u = self.buildUrlInterface(apiFuncParametrsList)
+
+        url = self.build_url(id)
+        #url = self.build_url(parametrsApiFunc)
+        res = requests.get(url).json()
+        return res['response'][0]['items']
+
+    def getFriends(self, idList: list) -> list:
+
+        apiFuncParametrsList = []
+
+        for id in idList:
+            apiFuncParametrsList.append(
+                {
+                    'function': 'API.friends.get',
+                    'parameters': [
+                        {'user_id': id},
+                        {'count': 200}
+                    ]
+                }
+            )
+        u = self.buildUrlInterface(apiFuncParametrsList)
+
+        url = self.build_url(id)
+        #url = self.build_url(parametrsApiFunc)
+        res = requests.get(url).json()
+        return res['response'][0]['items']
+
+    def getPhotos(self, id: list) -> list:
+
+        parametrsApiFunc = {
+            'function' : 'API.photos.getAll',
+            'parameters':[
+                {'owner_id': id},
+                {'count': 200}
+            ]
+        }
+        u = self.buildUrlInterface(parametrsApiFunc)
+
+        url = self.build_url(id)
+        #url = self.build_url(parametrsApiFunc)
+        res = requests.get(url).json()
+        return res['response'][0]['items']
