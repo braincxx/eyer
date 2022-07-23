@@ -1,0 +1,5 @@
+u - получает url запрос, по кторому получим айдишники (заменить на другое название переменной)
+
+
+https://api.vk.com/method/execute?access_token=cdbc6caaedfd1798275ac805473b93d1926c4670bf0cfa9b653d8f9076a894c17d26ac127164a4cdba3e9&v=5.101&code=return%20[API.friends.get(%7B%27user_id%27:219191193,%27count%27:200%7D),%20API.friends.get(%7B%27user_id%27:219191193,%27count%27:200%7D)];
+https://api.vk.com/method/execute?access_token=34e18822321d2250e48405155291b8478f1d27cdaf8306869015db0c40b33a4ac8a509fa5d783f79be7c3&v=5.101&code=return%20[API.photos.get (%7B%2owner_id%27:6487162,%20%27count%27:200%20%7D%20)

@@ -1,4 +1,6 @@
 import asyncio
+import os
+import sys
 from weakref import proxy
 from aiohttp import ClientSession
 import json
@@ -6,6 +8,7 @@ import nest_asyncio
 import random
 from datetime import datetime
 from collections import deque
+import urllib.request
 import time
 import pyodbc
 nest_asyncio.apply()
@@ -306,6 +309,16 @@ class VkApi():
 
         return url
 
+    def buildUrlInterfaceForPhoto(self, apiFuncParametrs: int) -> str:
+
+        api = f"""{apiFuncParametrs['function']}({{ {", ".join(["'" + [(k, p) for (k, p) in param.items()][0][0] + "':" + str([(k, p) for (k, p) in param.items()][0][1]) for param in apiFuncParametrs['parameters']]) }  }} )"""
+        #for i in range(1, len(apiFuncParametrs)):
+            #api += f""",{apiFuncParametrs[i]['function']}({{ {", ".join(["'" + [(k, p) for (k, p) in param.items()][0][0] + "':" + str([(k, p) for (k, p) in param.items()][0][1]) for param in apiFuncParametrs[i]['parameters']]) } }})"""
+
+        url = f"""https://api.vk.com/method/execute?access_token={list_token[id % len(list_token)]}&v=5.101&code=return%20[{api}];"""
+
+        return url
+
     def getFriend(self, id: int) -> list:
 
         apiFuncParametrsList = [
@@ -346,18 +359,34 @@ class VkApi():
         res = requests.get(url).json()
         return res['response'][0]['items']
 
-    def getPhotos(self, id: list) -> list:
+    def get_photos(self, idList: list) -> list:
 
-        parametrsApiFunc = {
-            'function' : 'API.photos.getAll',
-            'parameters':[
-                {'owner_id': id},
-                {'count': 200}
-            ]
-        }
-        u = self.buildUrlInterface(parametrsApiFunc)
+        # parametrsApiFuncList = []
+        for id in idList[:5]:
+            count = 0
+            parametrsApiFuncList = {
+                'function': 'API.photos.getAll',
+                'parameters': [
+                    {'owner_id': id},
+                    {'count': 200}
+                ]
+            }
 
-        url = self.build_url(id)
-        #url = self.build_url(parametrsApiFunc)
-        res = requests.get(url).json()
-        return res['response'][0]['items']
+            newpath = os.path.join(sys.path[0], str(id))
+            if not os.path.exists(newpath):
+                os.makedirs(newpath)
+
+            u = self.buildUrlInterfaceForPhoto(parametrsApiFuncList)
+            result_foto = requests.get(u).json()
+            # print(result_foto)
+
+            for i in range(len(result_foto['response'][0]["items"])):
+                count += 1
+                # берём ссылку на максимальный размер фотографии
+                photo_url = str(result_foto['response'][0]["items"][i]["sizes"][
+                                    len(result_foto['response'][0]["items"][i]["sizes"]) - 1]["url"])
+                print(count)
+                # скачиваем фото в папку с ID пользователя
+                # urllib.urlretrieve(photo_url, newpath + '/' + str(response["items"][i]['id']) + '.jpg')
+                urllib.request.urlretrieve(photo_url,
+                                           newpath + '/' + str(result_foto['response'][0]["items"][i]['id']) + '.jpg')
