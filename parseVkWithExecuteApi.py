@@ -367,12 +367,12 @@ class VkApi():
                 #resp = await response.read()
                 for i in range(len(resp['response'][0]["items"])):
                     photo_url = str(resp['response'][0]["items"][i]["sizes"][len(resp['response'][0]["items"][i]["sizes"]) - 1]["url"])
-                    print(photo_url) # link for download
+                    print(photo_url) # link for download!
         except Exception as e:
             print(e)
-        else:
-            return resp
-        return
+        # else:  впринципе не нужно
+        #     return resp
+        # return
 
     async def fetchAsync(self, apiParam):
         api = f"""{apiParam['function']}({{ {", ".join(["'" + [(k, p) for (k, p) in param.items()][0][0] + "':" + str([(k, p) for (k, p) in param.items()][0][1]) for param in apiParam['parameters']])}  }} )"""
