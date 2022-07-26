@@ -359,11 +359,39 @@ class VkApi():
         res = requests.get(url).json()
         return res['response'][0]['items']
 
-    def get_photos(self, idList: list) -> list:
+
+    async def fetchUrlData(self, session_for_async, url):
+        try:
+            async with session_for_async.get(url, timeout=60) as response:
+                resp = await response.json()
+                #resp = await response.read()
+                for i in range(len(resp['response'][0]["items"])):
+                    photo_url = str(resp['response'][0]["items"][i]["sizes"][len(resp['response'][0]["items"][i]["sizes"]) - 1]["url"])
+                    print(photo_url) # link for download
+        except Exception as e:
+            print(e)
+        else:
+            return resp
+        return
+
+    async def fetchAsync(self, apiParam):
+        api = f"""{apiParam['function']}({{ {", ".join(["'" + [(k, p) for (k, p) in param.items()][0][0] + "':" + str([(k, p) for (k, p) in param.items()][0][1]) for param in apiParam['parameters']])}  }} )"""
+
+        url = f"""https://api.vk.com/method/execute?access_token={list_token[id % len(list_token)]}&v=5.101&code=return%20[{api}];"""
+        tasks = []
+        async with ClientSession() as session_for_async:
+            task = asyncio.ensure_future(self.fetchUrlData(session_for_async, url))
+            tasks.append(task)
+            responses = await asyncio.gather(*tasks)
+        return responses
+
+
+
+    def getPhotos(self, idList: list) -> list:
 
         # parametrsApiFuncList = []
-        for id in idList[:5]:
-            count = 0
+        for id in idList:
+            #count = 0
             parametrsApiFuncList = {
                 'function': 'API.photos.getAll',
                 'parameters': [
@@ -372,21 +400,26 @@ class VkApi():
                 ]
             }
 
-            newpath = os.path.join(sys.path[0], str(id))
-            if not os.path.exists(newpath):
-                os.makedirs(newpath)
+            loop = asyncio.get_event_loop()
+            future = asyncio.ensure_future(self.fetchAsync(parametrsApiFuncList))
+            loop.run_until_complete(future)
+            responses = future.result()
 
-            u = self.buildUrlInterfaceForPhoto(parametrsApiFuncList)
-            result_foto = requests.get(u).json()
+            # newpath = os.path.join(sys.path[0], str(id))
+            # if not os.path.exists(newpath):
+            #     os.makedirs(newpath)
+
+            # u = self.buildUrlInterfaceForPhoto(parametrsApiFuncList)
+            # result_foto = requests.get(u).json()
             # print(result_foto)
 
-            for i in range(len(result_foto['response'][0]["items"])):
-                count += 1
-                # берём ссылку на максимальный размер фотографии
-                photo_url = str(result_foto['response'][0]["items"][i]["sizes"][
-                                    len(result_foto['response'][0]["items"][i]["sizes"]) - 1]["url"])
-                print(count)
-                # скачиваем фото в папку с ID пользователя
-                # urllib.urlretrieve(photo_url, newpath + '/' + str(response["items"][i]['id']) + '.jpg')
-                urllib.request.urlretrieve(photo_url,
-                                           newpath + '/' + str(result_foto['response'][0]["items"][i]['id']) + '.jpg')
+            # for i in range(len(result_foto['response'][0]["items"])):
+            #     count += 1
+            #     # берём ссылку на максимальный размер фотографии
+            #     photo_url = str(result_foto['response'][0]["items"][i]["sizes"][
+            #                         len(result_foto['response'][0]["items"][i]["sizes"]) - 1]["url"])
+            #     print(count)
+            #     # скачиваем фото в папку с ID пользователя
+            #     # urllib.urlretrieve(photo_url, newpath + '/' + str(response["items"][i]['id']) + '.jpg')
+            #     urllib.request.urlretrieve(photo_url,
+            #                                newpath + '/' + str(result_foto['response'][0]["items"][i]['id']) + '.jpg')
