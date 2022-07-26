@@ -390,6 +390,7 @@ class VkApi():
     def getPhotos(self, idList: list) -> list:
 
         # parametrsApiFuncList = []
+        loop = asyncio.get_event_loop()
         for id in idList:
             #count = 0
             parametrsApiFuncList = {
@@ -400,7 +401,7 @@ class VkApi():
                 ]
             }
 
-            loop = asyncio.get_event_loop()
+
             future = asyncio.ensure_future(self.fetchAsync(parametrsApiFuncList))
             loop.run_until_complete(future)
             responses = future.result()
